@@ -2,7 +2,7 @@
 
 A sophisticated multi-tab voice interface for Claude AI with real-time speech recognition, text-to-speech, and session management. Built for power users who need multiple concurrent AI conversations with voice interaction.
 
-![Version](https://img.shields.io/badge/version-2.1.0-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-2.3.1-brightgreen.svg)
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
 ![Flask](https://img.shields.io/badge/flask-3.0.0-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
@@ -12,8 +12,10 @@ A sophisticated multi-tab voice interface for Claude AI with real-time speech re
 ### Core Functionality
 - **4 Independent Claude Sessions**: Each tab maintains its own conversation context
 - **Real-time Voice Recognition**: Powered by Web Speech API with automatic 2-second silence detection
-- **Text-to-Speech Synthesis**: Natural voice responses using Microsoft Edge TTS (en-US-AriaNeural)
+- **Text-to-Speech Synthesis**: Natural voice responses using Microsoft Edge TTS with multiple voice options
 - **Smart Tab Management**: Voice input routes to the originating tab, even when switching mid-speech
+- **Persistent Session Storage**: Save and restore conversations across devices
+- **Settings Panel**: Customize notification sounds and voice announcements
 
 ### User Interface
 - **Visual Feedback**: 
@@ -21,17 +23,25 @@ A sophisticated multi-tab voice interface for Claude AI with real-time speech re
   - 🟡 Yellow tab highlighting for unread messages
   - 🔵 Blue chat bubbles for Claude's responses
   - ✨ Neon green cyberpunk theme with glowing effects
+  - ⏳ Processing indicators during Claude requests
+  - 💾 Save state indicator
 - **Interactive Elements**:
   - Double-click tabs to rename
   - Keyboard shortcuts for efficiency
-  - Cross-tab notification chimes
+  - Customizable notification sounds (4 chime options)
+  - Voice announcements for tab responses
+  - Settings modal (⚙️) for preferences
+  - Save toggle (💾) for session persistence
   - Responsive design with smooth animations
 
 ### Technical Features
 - **WebSocket Communication**: Real-time bidirectional messaging
 - **SSL/HTTPS**: Secure connections for microphone access
-- **Session Persistence**: Conversations maintained across browser refreshes
+- **Session Persistence**: Conversations saved to server and restored across devices
 - **Auto-Approval Mode**: Bash commands execute without manual confirmation
+- **Per-Request Stats**: Real-time token usage and processing time display
+- **Auto-Save**: Automatic session saving after each bot response
+- **Voice Selection**: 13 different TTS voices available
 
 ## 📋 Prerequisites
 
@@ -160,12 +170,48 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📊 Version History
 
-See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
+### Version 2.3.1 (2025-08-11)
+- Fixed bot responses not showing after page refresh
+- Improved session restoration with on-demand creation
+- Enhanced session management to avoid conflicts
 
-**Current Version: 2.1.0**
-- Stats display works like Claude AI (per-request metrics)
+### Version 2.3.0 (2025-08-11)
+- Added save state toggle (💾) for persistent sessions
+- Implemented auto-save after each bot response
+- Added server-side session storage
+- Sessions now work across different browsers/devices
+- Added TTS endpoint for voice announcements
+
+### Version 2.2.0 (2025-08-11)
+- Added settings panel with configuration options
+- Implemented 4 customizable chime sounds
+- Added voice announcement mode (speaks tab name)
+- Settings persistence in localStorage
+- Test sound functionality in settings
+
+### Version 2.1.0 (2025-08-11)
+- Stats display now works like Claude AI (per-request)
 - Fixed thread synchronization issues
 - Added terminal monitor integration
+- Processing indicator during active requests
+- Token formatting with k-notation
+
+### Version 2.0.0 (2025-08-10)
+- Complete multi-tab architecture rewrite
+- Added real-time voice interaction
+- Implemented WebSocket communication
+- Per-tab session management
+- Visual indicators for active/unread tabs
+- HTTPS support with self-signed certificates
+
+### Version 1.0.0 (2025-08-09)
+- Initial release
+- Single session support
+- Basic voice input/output
+- Simple web interface
+- Claude API integration
+
+See [CHANGELOG.md](CHANGELOG.md) for more detailed version history.
 
 ## 🐛 Known Issues
 
@@ -177,13 +223,17 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 ## 🚧 Roadmap
 
 - [ ] Dynamic session creation (more than 4 tabs)
-- [ ] User authentication and session persistence
+- [ ] User authentication and multi-user support
 - [ ] Docker containerization
 - [ ] Cloud deployment guide
 - [ ] Mobile responsive design
-- [ ] Custom voice selection UI
+- [x] Custom voice selection UI (v2.2.0)
 - [ ] Export conversation history
 - [ ] Keyboard shortcut customization
+- [x] Session persistence across devices (v2.3.0)
+- [x] Customizable notification sounds (v2.2.0)
+- [ ] Conversation search functionality
+- [ ] Claude model selection
 
 ## 📞 Support
 
