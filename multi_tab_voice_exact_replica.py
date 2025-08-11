@@ -304,9 +304,9 @@ HTML_TEMPLATE = '''
         #subtitle.subtitle {
             display: block;
             position: static;
-            width: 517.5px;
+            width: 100%;
             height: 25px;
-            margin: 0px 0px 30px;
+            margin: 0px auto 30px;
             padding: 0px;
             border: 0px none;
             background-color: rgba(0, 0, 0, 0);
@@ -323,9 +323,9 @@ HTML_TEMPLATE = '''
             flex-direction: row;
             justify-content: center;
             align-items: normal;
-            width: 517.5px;
+            width: 100%;
             height: 120px;
-            margin: 20px 0px;
+            margin: 20px auto;
             padding: 0px;
             border: 0px none;
             background-color: rgba(0, 0, 0, 0);
@@ -373,10 +373,10 @@ HTML_TEMPLATE = '''
         #status.status {
             display: block;
             position: static;
-            width: 517.5px;
+            width: 100%;
             height: 23.9844px;
             min-height: 24px;
-            margin: 20px 0px;
+            margin: 20px auto;
             padding: 0px;
             border: 0px none;
             background-color: rgba(0, 0, 0, 0);
@@ -566,11 +566,12 @@ HTML_TEMPLATE = '''
         #conversationLog.conversation-log {
             display: block;
             position: static;
-            width: 517.5px;
+            width: 100%;
+            max-width: 517.5px;
             height: 250px;
             min-height: 250px;
             max-height: 250px;
-            margin: 15px 0px 0px;
+            margin: 15px auto 0px;
             padding: 15px;
             border: 1.25px solid rgb(0, 255, 0);
             border-radius: 10px;
@@ -578,8 +579,9 @@ HTML_TEMPLATE = '''
             color: rgb(0, 255, 0);
             font-size: 16px;
             text-align: start;
-            overflow-x: auto;
+            overflow-x: hidden;
             overflow-y: auto;
+            box-sizing: border-box;
         }
         
         /* Message Styles */
@@ -587,6 +589,10 @@ HTML_TEMPLATE = '''
             margin-bottom: 10px;
             padding: 8px 12px;
             border-radius: 5px;
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
         }
         
         .message.user-message {
@@ -843,6 +849,306 @@ HTML_TEMPLATE = '''
         .modal-buttons button:not(.cancel) {
             background-color: rgb(0, 255, 0);
             color: rgb(0, 0, 0);
+        }
+        
+        /* Mobile Responsive Styles */
+        @media screen and (max-width: 768px) {
+            /* Container adjustments */
+            .container {
+                padding: 5px;
+                padding-top: 50px;
+                overflow: hidden;
+            }
+            
+            /* Main card responsive */
+            .main-card {
+                width: calc(100vw - 10px);
+                max-width: calc(100vw - 10px);
+                height: calc(100vh - 60px);
+                max-height: calc(100vh - 60px);
+                padding: 15px;
+                margin: 0 auto;
+                border-radius: 10px;
+                overflow: visible;
+                box-sizing: border-box;
+            }
+            
+            /* Tab bar adjustments */
+            .tab-bar {
+                gap: 5px;
+                padding: 0 10px;
+            }
+            
+            .tab {
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+            
+            /* Title and subtitle */
+            h1 {
+                font-size: 24px;
+                height: auto;
+                width: 100%;
+                text-align: center;
+                margin-bottom: 5px;
+                margin-top: 20px;
+                padding: 0 30px;
+            }
+            
+            .subtitle {
+                font-size: 14px;
+                margin-bottom: 15px;
+                text-align: center;
+                width: 100%;
+            }
+            
+            /* Mic button */
+            .mic-container {
+                margin: 15px auto;
+                display: flex;
+                justify-content: center;
+                width: 100%;
+            }
+            
+            .mic-button {
+                width: 80px;
+                height: 80px;
+                font-size: 40px;
+            }
+            
+            /* Status text */
+            .status {
+                font-size: 14px;
+                margin: 10px 0;
+                text-align: center;
+                width: 100%;
+            }
+            
+            /* Text input container */
+            .text-input-container {
+                margin-bottom: 15px;
+                width: 100%;
+                display: flex;
+                gap: 5px;
+            }
+            
+            .text-input {
+                font-size: 14px;
+                padding: 10px;
+                flex: 1;
+                min-width: 0;
+                width: 70%;
+            }
+            
+            .send-button {
+                padding: 10px 15px;
+                font-size: 14px;
+                flex-shrink: 0;
+                width: auto;
+            }
+            
+            /* Controls row */
+            .controls-row {
+                margin-bottom: 15px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .voice-select {
+                width: 100%;
+                margin-bottom: 10px;
+                font-size: 14px;
+            }
+            
+            .mute-button, .bell-button, .settings-button, .save-button {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+            
+            /* Conversation log */
+            .conversation-log {
+                height: 60px;
+                max-height: 60px;
+                margin-bottom: 10px;
+                margin-top: 20px;
+                overflow-y: auto;
+                overflow-x: hidden;
+                flex-shrink: 1;
+                border: 1px solid rgb(0, 255, 0);
+                width: 90%;
+                max-width: 90%;
+                margin-left: auto;
+                margin-right: auto;
+                padding: 3px;
+                box-sizing: border-box;
+                position: relative;
+                top: 50px;
+            }
+            
+            .message {
+                padding: 8px 12px;
+                font-size: 14px;
+                margin: 5px 0;
+                word-wrap: break-word;
+                word-break: break-word;
+                max-width: 100%;
+                overflow-wrap: break-word;
+            }
+            
+            /* Stats box */
+            .token-usage-box {
+                position: static;
+                right: auto;
+                top: auto;
+                width: 100%;
+                max-width: 100%;
+                padding: 8px;
+                margin: 10px 0 0 0;
+                background-color: rgba(0, 20, 0, 0.95);
+                border: 1px solid rgb(0, 255, 0);
+                border-radius: 5px;
+            }
+            
+            .timer-row, .tokens-row {
+                font-size: 12px;
+            }
+            
+            /* Connection indicator */
+            .connection-indicator {
+                font-size: 12px;
+                top: 5px;
+                right: 5px;
+            }
+            
+            /* Tab count */
+            .tab-count {
+                font-size: 12px;
+                top: 5px;
+                left: 5px;
+            }
+            
+            /* Settings modal */
+            .settings-modal .modal-content {
+                width: 90%;
+                max-width: 400px;
+                padding: 20px;
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+            
+            .settings-modal h2 {
+                font-size: 20px;
+            }
+            
+            /* Hide debug box on mobile */
+            #debugBox {
+                display: none !important;
+            }
+        }
+        
+        /* Small mobile screens */
+        @media screen and (max-width: 480px) {
+            .main-card {
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+            
+            .mic-button {
+                width: 70px;
+                height: 70px;
+                font-size: 35px;
+            }
+            
+            .conversation-log {
+                height: 150px;
+                max-height: 25vh;
+            }
+            
+            .controls-row {
+                gap: 5px;
+            }
+            
+            .mute-button, .bell-button, .settings-button, .save-button {
+                width: 35px;
+                height: 35px;
+                font-size: 18px;
+            }
+        }
+        
+        /* iPhone specific fixes */
+        @media screen and (max-width: 414px) {
+            body {
+                overflow: hidden;
+                position: fixed;
+                width: 100%;
+                height: 100%;
+            }
+            
+            .container {
+                position: fixed;
+                width: 100%;
+                height: 100%;
+                padding: 5px;
+                padding-top: 45px;
+            }
+            
+            .main-card {
+                width: calc(100% - 10px);
+                height: calc(100% - 50px);
+                max-height: none;
+                overflow-y: auto;
+                overflow-x: hidden;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* Even smaller chat log on iPhone */
+            .conversation-log {
+                height: 50px;
+                max-height: 50px;
+                margin-bottom: 10px;
+                margin-top: 20px;
+                width: 85%;
+                max-width: 85%;
+                padding: 2px;
+                margin-left: auto;
+                margin-right: auto;
+                position: relative;
+                top: 60px;
+            }
+            
+            /* Ensure text input fits */
+            .text-input-container {
+                padding: 0 5px;
+            }
+            
+            .text-input {
+                width: calc(100% - 80px);
+            }
+            
+            .send-button {
+                width: 60px;
+                padding: 10px 5px;
+            }
+            
+            /* Ensure controls are always visible */
+            .controls-row {
+                flex-shrink: 0;
+                width: 100%;
+                padding: 5px 0;
+                margin-bottom: 10px;
+            }
+            
+            /* Fix token box at bottom */
+            .token-usage-box {
+                flex-shrink: 0;
+                margin-top: 10px;
+            }
         }
         
     </style>

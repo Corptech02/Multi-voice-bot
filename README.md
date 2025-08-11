@@ -2,7 +2,7 @@
 
 A sophisticated multi-tab voice interface for Claude AI with real-time speech recognition, text-to-speech, and session management. Built for power users who need multiple concurrent AI conversations with voice interaction.
 
-![Version](https://img.shields.io/badge/version-2.3.1-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-2.4.0-brightgreen.svg)
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
 ![Flask](https://img.shields.io/badge/flask-3.0.0-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
@@ -169,6 +169,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Web Speech API for browser-based voice recognition
 
 ## 📊 Version History
+
+### Version 2.4.0 (2025-08-11) - Mobile Responsive Update
+- Added comprehensive mobile responsive design
+- iPhone-specific optimizations (tested on iPhone 12)
+- Fixed all mobile UI issues (cutoffs, overlaps, spacing)
+- Chat log properly positioned below controls
+- All elements properly sized for touch interfaces
 
 ### Version 2.3.1 (2025-08-11)
 - Fixed bot responses not showing after page refresh

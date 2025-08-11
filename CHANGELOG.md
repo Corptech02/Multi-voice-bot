@@ -5,6 +5,25 @@ All notable changes to the Multi-Tab Claude Voice Bot will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2025-08-11
+
+### Added
+- Comprehensive mobile responsive design for smartphones
+- iPhone-specific optimizations (tested on iPhone 12)
+- Responsive width adjustments for all UI elements
+
+### Changed
+- Chat log repositioned and resized for mobile screens
+- Control buttons optimized for touch interfaces
+- Text input and send button properly sized for mobile
+- All text elements centered on mobile devices
+
+### Fixed
+- Right-side cutoff issues on mobile screens
+- Chat log no longer overlaps control buttons
+- Message text wrapping to prevent horizontal overflow
+- Proper spacing between all UI elements on small screens
+
 ## [2.3.1] - 2025-08-11
 
 ### Fixed
