@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binding of Isaac Clone - Fixed</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #2a2a2a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        
+        .game-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .ui-container {
+            background-color: #1a1a1a;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            min-width: 960px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .ui-left {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        
+        .health-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .health-label {
+            color: #ccc;
+            font-size: 14px;
+        }
+        
+        #healthDisplay {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .heart {
+            width: 24px;
+            height: 24px;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            filter: brightness(0.3);
+            transition: filter 0.3s;
+        }
+        
+        .heart.full {
+            filter: brightness(1) saturate(1.5) hue-rotate(-10deg);
+        }
+        
+        .stats {
+            color: #fff;
+            font-size: 16px;
+            display: flex;
+            gap: 20px;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .stat-label {
+            color: #999;
+            font-size: 14px;
+        }
+        
+        .stat-value {
+            color: #fff;
+            font-weight: bold;
+        }
+        
+        #gameCanvas {
+            border: 3px solid #444;
+            background-color: #1a1a1a;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .controls {
+            color: #ccc;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 24px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="ui-container">
+            <div class="ui-left">
+                <div class="health-container">
+                    <span class="health-label">Health:</span>
+                    <div id="healthDisplay"></div>
+                </div>
+                <div class="stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Score:</span>
+                        <span class="stat-value" id="score">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Weapon:</span>
+                        <span class="stat-value" id="weapon">Tears</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Ammo:</span>
+                        <span class="stat-value" id="ammo">∞</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="960" height="720"></canvas>
+        
+        <div class="controls">
+            <p>Move: WASD or Arrow Keys | Shoot: Click or Arrow Keys | Pause: P</p>
+        </div>
+        
+        <div class="loading" id="loadingText">Loading game...</div>
+    </div>
+
+    <script>
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, initializing game...');
+        
+        // Game constants
+        const CANVAS_WIDTH = 960;
+        const CANVAS_HEIGHT = 720;
+        const ROOM_WIDTH = 800;
+        const ROOM_HEIGHT = 600;
+        const ROOM_OFFSET_X = (CANVAS_WIDTH - ROOM_WIDTH) / 2;
+        const ROOM_OFFSET_Y = (CANVAS_HEIGHT - ROOM_HEIGHT) / 2;
+
+        // Get canvas and context
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        if (!canvas || !ctx) {
+            console.error('Failed to get canvas or context!');
+            return;
+        }
+
+        // Game state
+        const game = {
+            state: 'playing',
+            score: 0,
+            currentRoom: 0,
+            frameCount: 0
+        };
+
+        // Player object
+        const player = {
+            x: CANVAS_WIDTH / 2,
+            y: CANVAS_HEIGHT / 2,
+            radius: 15,
+            speed: 4,
+            health: 6,
+            maxHealth: 6,
+            tearDamage: 1,
+            tearRate: 500,
+            tearSpeed: 8,
+            tearRange: 250,
+            lastShot: 0,
+            invulnerable: false,
+            invulnerableTime: 0,
+            invulnerableDuration: 1000
+        };
+
+        // Input handling
+        const keys = {};
+        const mouse = { x: 0, y: 0 };
+
+        // Game objects arrays
+        const tears = [];
+        const enemies = [];
+        const obstacles = [];
+
+        // Create some initial obstacles (rocks)
+        function createObstacles() {
+            // Add some rocks in the room
+            const rockPositions = [
+                { x: 200, y: 200 },
+                { x: 600, y: 200 },
+                { x: 200, y: 400 },
+                { x: 600, y: 400 },
+                { x: 400, y: 300 }
+            ];
+            
+            rockPositions.forEach(pos => {
+                obstacles.push({
+                    x: ROOM_OFFSET_X + pos.x,
+                    y: ROOM_OFFSET_Y + pos.y,
+                    width: 40,
+                    height: 40,
+                    type: 'rock'
+                });
+            });
+        }
+
+        // Create some initial enemies
+        function createEnemies() {
+            // Add a few simple enemies
+            for (let i = 0; i < 5; i++) {
+                enemies.push({
+                    x: ROOM_OFFSET_X + 100 + Math.random() * 600,
+                    y: ROOM_OFFSET_Y + 100 + Math.random() * 400,
+                    radius: 20,
+                    speed: 1,
+                    health: 3,
+                    color: '#ff4444',
+                    type: 'basic'
+                });
+            }
+        }
+
+        // Input event listeners
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            
+            // Shooting with arrow keys
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || 
+                e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                shootTearDirection(e.key);
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = e.clientX - rect.left;
+            mouse.y = e.clientY - rect.top;
+        });
+
+        canvas.addEventListener('click', shootTear);
+
+        // Tear class
+        class Tear {
+            constructor(x, y, vx, vy, damage) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.radius = 5;
+                this.damage = damage;
+                this.distanceTraveled = 0;
+                this.maxDistance = player.tearRange;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.distanceTraveled += Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                
+                if (this.distanceTraveled > this.maxDistance) {
+                    return false;
+                }
+                
+                if (this.x < ROOM_OFFSET_X + this.radius || 
+                    this.x > ROOM_OFFSET_X + ROOM_WIDTH - this.radius ||
+                    this.y < ROOM_OFFSET_Y + this.radius || 
+                    this.y > ROOM_OFFSET_Y + ROOM_HEIGHT - this.radius) {
+                    return false;
+                }
+                
+                return true;
+            }
+
+            draw() {
+                ctx.fillStyle = '#4444ff';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Add a little glow effect
+                ctx.strokeStyle = '#6666ff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
+        // Shooting functions
+        function shootTear() {
+            const now = Date.now();
+            if (now - player.lastShot < player.tearRate) return;
+            
+            const dx = mouse.x - player.x;
+            const dy = mouse.y - player.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance > 0) {
+                const vx = (dx / distance) * player.tearSpeed;
+                const vy = (dy / distance) * player.tearSpeed;
+                tears.push(new Tear(player.x, player.y, vx, vy, player.tearDamage));
+                player.lastShot = now;
+            }
+        }
+
+        function shootTearDirection(direction) {
+            const now = Date.now();
+            if (now - player.lastShot < player.tearRate) return;
+            
+            let vx = 0, vy = 0;
+            switch(direction) {
+                case 'ArrowUp': vy = -player.tearSpeed; break;
+                case 'ArrowDown': vy = player.tearSpeed; break;
+                case 'ArrowLeft': vx = -player.tearSpeed; break;
+                case 'ArrowRight': vx = player.tearSpeed; break;
+            }
+            
+            if (vx !== 0 || vy !== 0) {
+                tears.push(new Tear(player.x, player.y, vx, vy, player.tearDamage));
+                player.lastShot = now;
+            }
+        }
+
+        // Update functions
+        function updatePlayer() {
+            // Movement
+            let dx = 0, dy = 0;
+            
+            if (keys['w'] || keys['arrowup']) dy = -player.speed;
+            if (keys['s'] || keys['arrowdown']) dy = player.speed;
+            if (keys['a'] || keys['arrowleft']) dx = -player.speed;
+            if (keys['d'] || keys['arrowright']) dx = player.speed;
+            
+            // Normalize diagonal movement
+            if (dx !== 0 && dy !== 0) {
+                dx *= 0.707;
+                dy *= 0.707;
+            }
+            
+            // Update position with room boundaries
+            player.x = Math.max(ROOM_OFFSET_X + player.radius, 
+                       Math.min(ROOM_OFFSET_X + ROOM_WIDTH - player.radius, player.x + dx));
+            player.y = Math.max(ROOM_OFFSET_Y + player.radius, 
+                       Math.min(ROOM_OFFSET_Y + ROOM_HEIGHT - player.radius, player.y + dy));
+            
+            // Update invulnerability
+            if (player.invulnerable) {
+                player.invulnerableTime -= 16;
+                if (player.invulnerableTime <= 0) {
+                    player.invulnerable = false;
+                }
+            }
+        }
+
+        function updateTears() {
+            for (let i = tears.length - 1; i >= 0; i--) {
+                if (!tears[i].update()) {
+                    tears.splice(i, 1);
+                    continue;
+                }
+                
+                // Check collision with enemies
+                for (let j = enemies.length - 1; j >= 0; j--) {
+                    const enemy = enemies[j];
+                    const dx = tears[i].x - enemy.x;
+                    const dy = tears[i].y - enemy.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < tears[i].radius + enemy.radius) {
+                        enemy.health -= tears[i].damage;
+                        tears.splice(i, 1);
+                        
+                        if (enemy.health <= 0) {
+                            enemies.splice(j, 1);
+                            game.score += 10;
+                            updateUI();
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        function updateEnemies() {
+            enemies.forEach(enemy => {
+                // Simple AI - move towards player
+                const dx = player.x - enemy.x;
+                const dy = player.y - enemy.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > 0) {
+                    enemy.x += (dx / distance) * enemy.speed;
+                    enemy.y += (dy / distance) * enemy.speed;
+                }
+                
+                // Check collision with player
+                if (!player.invulnerable && distance < player.radius + enemy.radius) {
+                    player.health--;
+                    player.invulnerable = true;
+                    player.invulnerableTime = player.invulnerableDuration;
+                    updateHealthDisplay();
+                    
+                    if (player.health <= 0) {
+                        game.state = 'gameover';
+                    }
+                }
+            });
+        }
+
+        // Drawing functions
+        function drawRoom() {
+            // Clear canvas
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            
+            // Draw room floor
+            ctx.fillStyle = '#2a2a2a';
+            ctx.fillRect(ROOM_OFFSET_X, ROOM_OFFSET_Y, ROOM_WIDTH, ROOM_HEIGHT);
+            
+            // Draw room walls
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(ROOM_OFFSET_X, ROOM_OFFSET_Y, ROOM_WIDTH, ROOM_HEIGHT);
+            
+            // Draw grid pattern on floor
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            const gridSize = 40;
+            
+            for (let x = ROOM_OFFSET_X; x <= ROOM_OFFSET_X + ROOM_WIDTH; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, ROOM_OFFSET_Y);
+                ctx.lineTo(x, ROOM_OFFSET_Y + ROOM_HEIGHT);
+                ctx.stroke();
+            }
+            
+            for (let y = ROOM_OFFSET_Y; y <= ROOM_OFFSET_Y + ROOM_HEIGHT; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(ROOM_OFFSET_X, y);
+                ctx.lineTo(ROOM_OFFSET_X + ROOM_WIDTH, y);
+                ctx.stroke();
+            }
+        }
+
+        function drawPlayer() {
+            // Draw player shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.beginPath();
+            ctx.ellipse(player.x, player.y + 5, player.radius * 0.8, player.radius * 0.4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw player
+            if (player.invulnerable && Math.floor(Date.now() / 100) % 2) {
+                ctx.globalAlpha = 0.5;
+            }
+            
+            ctx.fillStyle = '#ffcc66';
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw player face
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(player.x - 5, player.y - 2, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(player.x + 5, player.y - 2, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.globalAlpha = 1;
+        }
+
+        function drawObstacles() {
+            obstacles.forEach(obstacle => {
+                if (obstacle.type === 'rock') {
+                    // Draw rock shadow
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                    ctx.fillRect(obstacle.x + 3, obstacle.y + 3, obstacle.width, obstacle.height);
+                    
+                    // Draw rock
+                    ctx.fillStyle = '#666';
+                    ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                    
+                    // Add some detail
+                    ctx.strokeStyle = '#444';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                }
+            });
+        }
+
+        function drawEnemies() {
+            enemies.forEach(enemy => {
+                // Draw enemy shadow
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.beginPath();
+                ctx.ellipse(enemy.x, enemy.y + 5, enemy.radius * 0.8, enemy.radius * 0.4, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw enemy
+                ctx.fillStyle = enemy.color;
+                ctx.beginPath();
+                ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Add some detail
+                ctx.strokeStyle = '#aa2222';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+        }
+
+        // UI functions
+        function updateHealthDisplay() {
+            const healthDisplay = document.getElementById('healthDisplay');
+            healthDisplay.innerHTML = '';
+            
+            for (let i = 0; i < player.maxHealth; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                if (i < player.health) {
+                    heart.classList.add('full');
+                }
+                healthDisplay.appendChild(heart);
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('score').textContent = game.score;
+        }
+
+        // Main game loop
+        function gameLoop() {
+            game.frameCount++;
+            
+            if (game.state === 'playing') {
+                // Update
+                updatePlayer();
+                updateTears();
+                updateEnemies();
+                
+                // Draw
+                drawRoom();
+                drawObstacles();
+                drawEnemies();
+                tears.forEach(tear => tear.draw());
+                drawPlayer();
+                
+                // Debug info
+                if (game.frameCount % 60 === 0) {
+                    console.log(`Game running - Frame: ${game.frameCount}, Tears: ${tears.length}, Enemies: ${enemies.length}`);
+                }
+            } else if (game.state === 'gameover') {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                
+                ctx.fillStyle = '#fff';
+                ctx.font = '48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+                
+                ctx.font = '24px Arial';
+                ctx.fillText(`Final Score: ${game.score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 50);
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Initialize game
+        function init() {
+            console.log('Initializing game...');
+            createObstacles();
+            createEnemies();
+            updateHealthDisplay();
+            updateUI();
+            
+            // Hide loading text
+            document.getElementById('loadingText').style.display = 'none';
+            
+            // Start game loop
+            gameLoop();
+            console.log('Game started!');
+        }
+
+        // Start the game
+        init();
+    });
+    </script>
+</body>
+</html>

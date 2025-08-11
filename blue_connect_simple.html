@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blue Connect Four</title>
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to bottom, #000033, #000066, #000099);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+}
+
+.game-container {
+    background: rgba(0, 0, 0, 0.8);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 
+        0 0 50px rgba(0, 100, 255, 0.5),
+        inset 0 0 20px rgba(0, 100, 255, 0.1);
+    border: 2px solid rgba(0, 100, 255, 0.3);
+    position: relative;
+    z-index: 10;
+}
+
+.game-title {
+    text-align: center;
+    font-size: 3em;
+    margin-bottom: 20px;
+    background: linear-gradient(45deg, #0080ff, #00a0ff, #00c0ff, #00e0ff);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: flicker 2s infinite alternate;
+}
+
+@keyframes flicker {
+    0% { opacity: 1; }
+    50% { opacity: 0.8; }
+    100% { opacity: 1; }
+}
+
+.game-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: rgba(0, 100, 255, 0.1);
+    border-radius: 10px;
+}
+
+.player-indicator {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.player1-text {
+    color: #0080ff;
+    text-shadow: 0 0 10px rgba(0, 128, 255, 0.8);
+}
+
+.player2-text {
+    color: #00e0ff;
+    text-shadow: 0 0 10px rgba(0, 224, 255, 0.8);
+}
+
+.reset-button {
+    padding: 10px 20px;
+    font-size: 1.1em;
+    background: linear-gradient(45deg, #0080ff, #00a0ff);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 100, 255, 0.4);
+}
+
+.reset-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 100, 255, 0.6);
+}
+
+.reset-button:active {
+    transform: translateY(0);
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(7, 80px);
+    grid-template-rows: repeat(6, 80px);
+    gap: 5px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 10px;
+    border-radius: 15px;
+    box-shadow: inset 0 0 30px rgba(0, 100, 255, 0.2);
+}
+
+.cell {
+    background: radial-gradient(circle, #001a33, #000d1a);
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.cell:hover {
+    background: radial-gradient(circle, #002a4d, #001a33);
+    box-shadow: 
+        inset 0 0 10px rgba(0, 0, 0, 0.5),
+        0 0 15px rgba(0, 100, 255, 0.3);
+}
+
+.disc {
+    width: 90%;
+    height: 90%;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.player1 {
+    background: radial-gradient(circle at 30% 30%, #00a0ff, #0080ff, #0060cc);
+    box-shadow: 
+        0 0 20px rgba(0, 128, 255, 0.8),
+        inset -5px -5px 10px rgba(0, 0, 0, 0.3);
+}
+
+.player2 {
+    background: radial-gradient(circle at 30% 30%, #80ffff, #00e0ff, #00c0ff);
+    box-shadow: 
+        0 0 20px rgba(0, 224, 255, 0.8),
+        inset -5px -5px 10px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes dropIn {
+    0% {
+        transform: translate(-50%, -350%);
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    80% {
+        transform: translate(-50%, -45%);
+    }
+    100% {
+        transform: translate(-50%, -50%);
+    }
+}
+
+.winner-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3em;
+    font-weight: bold;
+    padding: 20px 40px;
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: 20px;
+    box-shadow: 0 0 50px rgba(0, 100, 255, 0.8);
+    animation: winnerPulse 1s infinite alternate;
+    z-index: 100;
+    color: white;
+}
+
+.hidden {
+    display: none;
+}
+
+@keyframes winnerPulse {
+    0% { transform: translate(-50%, -50%) scale(1); }
+    100% { transform: translate(-50%, -50%) scale(1.05); }
+}
+
+@media (max-width: 768px) {
+    .board {
+        grid-template-columns: repeat(7, 60px);
+        grid-template-rows: repeat(6, 60px);
+    }
+    
+    .game-title {
+        font-size: 2em;
+    }
+    
+    .game-container {
+        padding: 20px;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="game-title">💙 Blue Connect Four 💙</h1>
+        <div class="game-info">
+            <div class="player-indicator">
+                <span id="current-player" class="player1-text">Player 1's Turn</span>
+            </div>
+            <button class="reset-button" onclick="newGame()">New Game</button>
+        </div>
+        <div class="board" id="board"></div>
+        <div id="winner-message" class="winner-message hidden"></div>
+    </div>
+
+    <script>
+const ROWS = 6;
+const COLS = 7;
+const EMPTY = 0;
+const PLAYER1 = 1;
+const PLAYER2 = 2;
+
+let board = [];
+let currentPlayer = PLAYER1;
+let gameOver = false;
+
+function initBoard() {
+    board = [];
+    for (let r = 0; r < ROWS; r++) {
+        board[r] = [];
+        for (let c = 0; c < COLS; c++) {
+            board[r][c] = EMPTY;
+        }
+    }
+}
+
+function createBoard() {
+    const boardEl = document.getElementById('board');
+    boardEl.innerHTML = '';
+    
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.col = c;
+            cell.onclick = () => dropDisc(c);
+            boardEl.appendChild(cell);
+        }
+    }
+}
+
+function dropDisc(col) {
+    if (gameOver) return;
+    
+    // Find the lowest empty row in this column
+    let row = -1;
+    for (let r = ROWS - 1; r >= 0; r--) {
+        if (board[r][col] === EMPTY) {
+            row = r;
+            break;
+        }
+    }
+    
+    if (row === -1) return; // Column is full
+    
+    // Place the disc
+    board[row][col] = currentPlayer;
+    
+    // Add the disc visually
+    const cells = document.querySelectorAll('.cell');
+    const cellIndex = row * COLS + col;
+    const cell = cells[cellIndex];
+    
+    const disc = document.createElement('div');
+    disc.className = `disc player${currentPlayer}`;
+    disc.style.animation = 'dropIn 0.5s ease-in-out';
+    cell.appendChild(disc);
+    
+    // Check for win
+    if (checkWin(row, col)) {
+        gameOver = true;
+        showWinner();
+        return;
+    }
+    
+    // Check for draw
+    if (checkDraw()) {
+        gameOver = true;
+        showDraw();
+        return;
+    }
+    
+    // Switch players
+    currentPlayer = currentPlayer === PLAYER1 ? PLAYER2 : PLAYER1;
+    updateTurn();
+}
+
+function checkWin(row, col) {
+    const player = board[row][col];
+    
+    // Check all four directions
+    return checkLine(row, col, 0, 1, player) || // Horizontal
+           checkLine(row, col, 1, 0, player) || // Vertical
+           checkLine(row, col, 1, 1, player) || // Diagonal \
+           checkLine(row, col, 1, -1, player);  // Diagonal /
+}
+
+function checkLine(row, col, dRow, dCol, player) {
+    let count = 1;
+    
+    // Check forward
+    let r = row + dRow;
+    let c = col + dCol;
+    while (r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r][c] === player) {
+        count++;
+        r += dRow;
+        c += dCol;
+    }
+    
+    // Check backward
+    r = row - dRow;
+    c = col - dCol;
+    while (r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r][c] === player) {
+        count++;
+        r -= dRow;
+        c -= dCol;
+    }
+    
+    return count >= 4;
+}
+
+function checkDraw() {
+    for (let c = 0; c < COLS; c++) {
+        if (board[0][c] === EMPTY) return false;
+    }
+    return true;
+}
+
+function updateTurn() {
+    const turnEl = document.getElementById('current-player');
+    turnEl.textContent = `Player ${currentPlayer}'s Turn`;
+    turnEl.className = `player${currentPlayer}-text`;
+}
+
+function showWinner() {
+    const msg = document.getElementById('winner-message');
+    msg.textContent = `💙 Player ${currentPlayer} Wins! 💙`;
+    msg.classList.remove('hidden');
+}
+
+function showDraw() {
+    const msg = document.getElementById('winner-message');
+    msg.textContent = `💙 It's a Draw! 💙`;
+    msg.classList.remove('hidden');
+}
+
+function newGame() {
+    gameOver = false;
+    currentPlayer = PLAYER1;
+    initBoard();
+    createBoard();
+    updateTurn();
+    document.getElementById('winner-message').classList.add('hidden');
+}
+
+// Start the game
+newGame();
+    </script>
+</body>
+</html>

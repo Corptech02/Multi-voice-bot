@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COI Tool Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f3f4f6;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .section-header {
+            background: #f9fafb;
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+        }
+        .section-header:hover {
+            background: #f3f4f6;
+        }
+        .section-content {
+            padding: 16px;
+            display: none;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+            background: #fafafa;
+        }
+        .section.expanded .section-content {
+            display: block;
+        }
+        .arrow {
+            transition: transform 0.2s;
+        }
+        .section.expanded .arrow {
+            transform: rotate(90deg);
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>COI Tool Test Page</h1>
+        <p>This page tests all the COI Tool features including collapsible sections and data display.</p>
+        
+        <button onclick="fetchAndProcess()">Test Backend API</button>
+        
+        <div id="status"></div>
+        
+        <div id="sections" style="display: none;">
+            <div class="section" id="original-email-section">
+                <div class="section-header" onclick="toggleSection('original-email-section')">
+                    <h3>Original Email</h3>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="section-content" id="original-email"></div>
+            </div>
+            
+            <div class="section" id="extracted-details-section">
+                <div class="section-header" onclick="toggleSection('extracted-details-section')">
+                    <h3>Extracted COI Details</h3>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="section-content" id="extracted-details"></div>
+            </div>
+            
+            <div class="section" id="email-response-section">
+                <div class="section-header" onclick="toggleSection('email-response-section')">
+                    <h3>Email Response Preview</h3>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="section-content" id="email-response"></div>
+            </div>
+            
+            <div class="section" id="coi-preview-section">
+                <div class="section-header" onclick="toggleSection('coi-preview-section')">
+                    <h3>Generated COI Preview</h3>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="section-content">
+                    <a id="coi-link" href="#" target="_blank">Open COI PDF</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            section.classList.toggle('expanded');
+        }
+        
+        async function fetchAndProcess() {
+            const statusDiv = document.getElementById('status');
+            const sectionsDiv = document.getElementById('sections');
+            
+            try {
+                statusDiv.className = 'status';
+                statusDiv.textContent = 'Fetching requests...';
+                
+                // Get requests
+                const requestsResponse = await fetch('http://localhost:8001/api/v1/requests');
+                const requests = await requestsResponse.json();
+                
+                if (requests.length === 0) {
+                    throw new Error('No requests found');
+                }
+                
+                const firstRequest = requests[0];
+                
+                // Display original email
+                document.getElementById('original-email').textContent = firstRequest.email_content || 'No email content';
+                
+                statusDiv.textContent = 'Processing request...';
+                
+                // Process the request
+                const processResponse = await fetch(`http://localhost:8001/api/v1/requests/${firstRequest.id}/process`, {
+                    method: 'POST'
+                });
+                const processData = await processResponse.json();
+                
+                // Display all the data
+                document.getElementById('extracted-details').textContent = processData.processed_content || 'No extracted details';
+                document.getElementById('email-response').textContent = processData.response_message || 'No response message';
+                
+                if (processData.preview_url) {
+                    document.getElementById('coi-link').href = processData.preview_url;
+                }
+                
+                sectionsDiv.style.display = 'block';
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✅ Success! All data loaded. Click on section headers to expand/collapse.';
+                
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = `❌ Error: ${error.message}`;
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>

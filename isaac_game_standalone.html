@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binding of Isaac Clone - Standalone</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        #gameCanvas {
+            border: 2px solid #333;
+            background-color: #000;
+        }
+        .game-container {
+            text-align: center;
+        }
+        .controls {
+            color: #fff;
+            margin-top: 20px;
+        }
+        #healthDisplay {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .heart {
+            width: 20px;
+            height: 20px;
+            margin: 0 2px;
+        }
+        .heart.full {
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="red"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>') no-repeat center;
+            background-size: contain;
+        }
+        .heart.empty {
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="gray"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>') no-repeat center;
+            background-size: contain;
+        }
+        #stats {
+            color: #fff;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas" width="960" height="720"></canvas>
+        <div id="healthDisplay"></div>
+        <div id="stats"></div>
+        <div class="controls">
+            <p>Move: WASD | Shoot: Mouse Click | Pause: P</p>
+        </div>
+    </div>
+    
+    <script>
+        // Simple Isaac-like game implementation
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game constants
+        const ROOM_WIDTH = 800;
+        const ROOM_HEIGHT = 600;
+        const ROOM_OFFSET_X = (canvas.width - ROOM_WIDTH) / 2;
+        const ROOM_OFFSET_Y = (canvas.height - ROOM_HEIGHT) / 2;
+        
+        // Game state
+        const game = {
+            state: 'playing'
+        };
+        
+        // Player
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 15,
+            speed: 4,
+            health: 6,
+            maxHealth: 6,
+            tearDamage: 1,
+            tearSpeed: 8,
+            lastShot: 0,
+            shotCooldown: 500
+        };
+        
+        // Arrays for game objects
+        const tears = [];
+        const enemies = [];
+        
+        // Input
+        const keys = {};
+        const mouse = { x: 0, y: 0 };
+        
+        // Input handlers
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = e.clientX - rect.left;
+            mouse.y = e.clientY - rect.top;
+        });
+        
+        canvas.addEventListener('click', () => {
+            const now = Date.now();
+            if (now - player.lastShot > player.shotCooldown) {
+                player.lastShot = now;
+                
+                const dx = mouse.x - player.x;
+                const dy = mouse.y - player.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist > 0) {
+                    tears.push({
+                        x: player.x,
+                        y: player.y,
+                        vx: (dx / dist) * player.tearSpeed,
+                        vy: (dy / dist) * player.tearSpeed,
+                        radius: 5,
+                        damage: player.tearDamage
+                    });
+                }
+            }
+        });
+        
+        // Spawn some enemies
+        function spawnEnemies() {
+            for (let i = 0; i < 3; i++) {
+                const angle = (Math.PI * 2 * i) / 3;
+                enemies.push({
+                    x: canvas.width / 2 + Math.cos(angle) * 200,
+                    y: canvas.height / 2 + Math.sin(angle) * 200,
+                    radius: 20,
+                    speed: 1,
+                    health: 3,
+                    color: '#ff0000'
+                });
+            }
+        }
+        
+        // Update game
+        function update() {
+            // Player movement
+            let dx = 0, dy = 0;
+            if (keys['w']) dy -= player.speed;
+            if (keys['s']) dy += player.speed;
+            if (keys['a']) dx -= player.speed;
+            if (keys['d']) dx += player.speed;
+            
+            // Normalize diagonal movement
+            if (dx !== 0 && dy !== 0) {
+                const factor = 0.707;
+                dx *= factor;
+                dy *= factor;
+            }
+            
+            player.x += dx;
+            player.y += dy;
+            
+            // Keep player in room bounds
+            player.x = Math.max(ROOM_OFFSET_X + player.radius, 
+                        Math.min(ROOM_OFFSET_X + ROOM_WIDTH - player.radius, player.x));
+            player.y = Math.max(ROOM_OFFSET_Y + player.radius, 
+                        Math.min(ROOM_OFFSET_Y + ROOM_HEIGHT - player.radius, player.y));
+            
+            // Update tears
+            for (let i = tears.length - 1; i >= 0; i--) {
+                const tear = tears[i];
+                tear.x += tear.vx;
+                tear.y += tear.vy;
+                
+                // Remove if out of bounds
+                if (tear.x < ROOM_OFFSET_X || tear.x > ROOM_OFFSET_X + ROOM_WIDTH ||
+                    tear.y < ROOM_OFFSET_Y || tear.y > ROOM_OFFSET_Y + ROOM_HEIGHT) {
+                    tears.splice(i, 1);
+                }
+            }
+            
+            // Update enemies
+            for (let enemy of enemies) {
+                const dx = player.x - enemy.x;
+                const dy = player.y - enemy.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist > 0) {
+                    enemy.x += (dx / dist) * enemy.speed;
+                    enemy.y += (dy / dist) * enemy.speed;
+                }
+            }
+            
+            // Check collisions
+            // Tear vs Enemy
+            for (let i = tears.length - 1; i >= 0; i--) {
+                const tear = tears[i];
+                for (let j = enemies.length - 1; j >= 0; j--) {
+                    const enemy = enemies[j];
+                    const dx = tear.x - enemy.x;
+                    const dy = tear.y - enemy.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < tear.radius + enemy.radius) {
+                        enemy.health -= tear.damage;
+                        tears.splice(i, 1);
+                        
+                        if (enemy.health <= 0) {
+                            enemies.splice(j, 1);
+                        }
+                        break;
+                    }
+                }
+            }
+            
+            // Enemy vs Player
+            for (let enemy of enemies) {
+                const dx = player.x - enemy.x;
+                const dy = player.y - enemy.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist < player.radius + enemy.radius) {
+                    // Simple knockback
+                    const knockback = 20;
+                    player.x += (dx / dist) * knockback;
+                    player.y += (dy / dist) * knockback;
+                }
+            }
+        }
+        
+        // Render game
+        function render() {
+            // Clear canvas
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw room
+            ctx.fillStyle = '#3a3a3a';
+            ctx.fillRect(ROOM_OFFSET_X, ROOM_OFFSET_Y, ROOM_WIDTH, ROOM_HEIGHT);
+            
+            // Room border
+            ctx.strokeStyle = '#222';
+            ctx.lineWidth = 10;
+            ctx.strokeRect(ROOM_OFFSET_X, ROOM_OFFSET_Y, ROOM_WIDTH, ROOM_HEIGHT);
+            
+            // Draw tears
+            ctx.fillStyle = '#4FC3F7';
+            for (let tear of tears) {
+                ctx.beginPath();
+                ctx.arc(tear.x, tear.y, tear.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Draw enemies
+            for (let enemy of enemies) {
+                ctx.fillStyle = enemy.color;
+                ctx.beginPath();
+                ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Eyes
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(enemy.x - 7, enemy.y - 5, 3, 0, Math.PI * 2);
+                ctx.arc(enemy.x + 7, enemy.y - 5, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Draw player
+            ctx.fillStyle = '#FFB6C1';
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Player eyes
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(player.x - 5, player.y - 5, 2, 0, Math.PI * 2);
+            ctx.arc(player.x + 5, player.y - 5, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Update UI
+        function updateUI() {
+            const healthDiv = document.getElementById('healthDisplay');
+            healthDiv.innerHTML = '';
+            
+            for (let i = 0; i < player.maxHealth; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heart.classList.add(i < player.health ? 'full' : 'empty');
+                healthDiv.appendChild(heart);
+            }
+            
+            const statsDiv = document.getElementById('stats');
+            statsDiv.innerHTML = `Enemies: ${enemies.length} | Tears: ${tears.length}`;
+        }
+        
+        // Game loop
+        function gameLoop() {
+            update();
+            render();
+            updateUI();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Start game
+        spawnEnemies();
+        gameLoop();
+    </script>
+</body>
+</html>

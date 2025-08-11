@@ -1,0 +1,84 @@
+{
+  "driver_info": {
+    "first_name": "John",
+    "last_name": "Smith",
+    "date_of_birth": "1985-03-15",
+    "gender": "Male",
+    "marital_status": "Married",
+    "address": {
+      "street": "123 Main Street",
+      "city": "Atlanta",
+      "state": "GA",
+      "zip": "30301"
+    },
+    "email": "john.smith@example.com",
+    "phone": "404-555-1234",
+    "drivers_license": "GA123456789",
+    "occupation": "Construction Worker",
+    "dot_number": "3431557"
+  },
+  "driving_history": {
+    "years_licensed": 20,
+    "accidents_last_5_years": 0,
+    "violations_last_5_years": 0,
+    "dui_convictions": 0,
+    "current_insurance": {
+      "has_insurance": true,
+      "company": "State Farm",
+      "continuous_coverage_years": 10,
+      "policy_expiration": "2025-03-01"
+    }
+  },
+  "vehicle_info": {
+    "year": 2021,
+    "make": "Ford",
+    "model": "F-150",
+    "trim": "XLT SuperCrew 4WD",
+    "vin": "1FTFW1ET5MFC12345",
+    "ownership": "Owned",
+    "primary_use": "Personal",
+    "annual_mileage": 12000,
+    "garage_address": {
+      "street": "123 Main Street",
+      "city": "Atlanta", 
+      "state": "GA",
+      "zip": "30301"
+    },
+    "purchase_date": "2021-06-15",
+    "has_anti_theft": true,
+    "has_passive_restraint": true
+  },
+  "coverage_preferences": {
+    "liability": {
+      "bodily_injury_per_person": 100000,
+      "bodily_injury_per_accident": 300000,
+      "property_damage": 100000
+    },
+    "comprehensive": {
+      "enabled": true,
+      "deductible": 500
+    },
+    "collision": {
+      "enabled": true,
+      "deductible": 500
+    },
+    "uninsured_motorist": {
+      "enabled": true,
+      "bodily_injury_per_person": 100000,
+      "bodily_injury_per_accident": 300000
+    },
+    "medical_payments": 5000,
+    "rental_reimbursement": true,
+    "roadside_assistance": true,
+    "gap_coverage": false
+  },
+  "additional_info": {
+    "homeowner": true,
+    "education_level": "High School",
+    "credit_score_range": "Good (670-739)",
+    "multi_policy_discount": false,
+    "military_affiliation": false,
+    "good_student": false,
+    "defensive_driving_course": false
+  }
+}

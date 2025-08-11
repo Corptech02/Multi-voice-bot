@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+            font-family: monospace;
+        }
+        #status {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #333;
+            border-radius: 5px;
+        }
+        canvas {
+            border: 2px solid #00ff00;
+            display: block;
+            margin: 20px 0;
+        }
+        .error {
+            color: #ff0000;
+        }
+        .success {
+            color: #00ff00;
+        }
+    </style>
+</head>
+<body>
+    <div id="status">Loading...</div>
+    <canvas id="testCanvas" width="800" height="400"></canvas>
+    
+    <script>
+        const status = document.getElementById('status');
+        const canvas = document.getElementById('testCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Test basic canvas functionality
+        try {
+            status.innerHTML = 'Testing canvas...<br>';
+            
+            // Test 1: Can we get context?
+            if (ctx) {
+                status.innerHTML += '<span class="success">✓ Canvas context obtained</span><br>';
+            } else {
+                status.innerHTML += '<span class="error">✗ Failed to get canvas context</span><br>';
+            }
+            
+            // Test 2: Can we draw?
+            ctx.fillStyle = '#00ff00';
+            ctx.fillRect(0, 0, 100, 100);
+            status.innerHTML += '<span class="success">✓ Basic drawing works</span><br>';
+            
+            // Test 3: Test gradient
+            const gradient = ctx.createLinearGradient(0, 0, 800, 0);
+            gradient.addColorStop(0, '#ff0000');
+            gradient.addColorStop(1, '#0000ff');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 150, 800, 100);
+            status.innerHTML += '<span class="success">✓ Gradient drawing works</span><br>';
+            
+            // Test 4: Test text
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '20px monospace';
+            ctx.fillText('Canvas is working!', 200, 50);
+            status.innerHTML += '<span class="success">✓ Text drawing works</span><br>';
+            
+            // Test 5: Animation frame
+            let animationWorking = false;
+            requestAnimationFrame(() => {
+                animationWorking = true;
+                ctx.fillStyle = '#ffff00';
+                ctx.fillRect(700, 50, 50, 50);
+                status.innerHTML += '<span class="success">✓ Animation frame works</span><br>';
+                status.innerHTML += '<br><strong>All tests passed! Canvas is functional.</strong>';
+            });
+            
+            setTimeout(() => {
+                if (!animationWorking) {
+                    status.innerHTML += '<span class="error">✗ Animation frame not working</span><br>';
+                }
+            }, 1000);
+            
+        } catch (error) {
+            status.innerHTML += '<span class="error">Error: ' + error.message + '</span><br>';
+            console.error('Canvas test error:', error);
+        }
+        
+        // Test game files
+        status.innerHTML += '<br><strong>Testing game files...</strong><br>';
+        
+        // Check if we can load the retro-shooter game
+        fetch('/retro-shooter/index.html')
+            .then(response => {
+                if (response.ok) {
+                    status.innerHTML += '<span class="success">✓ Can access retro-shooter/index.html</span><br>';
+                } else {
+                    status.innerHTML += '<span class="error">✗ Cannot access retro-shooter/index.html</span><br>';
+                }
+            })
+            .catch(error => {
+                status.innerHTML += '<span class="error">✗ Error accessing game: ' + error + '</span><br>';
+            });
+            
+        fetch('/retro-shooter/game.js')
+            .then(response => {
+                if (response.ok) {
+                    status.innerHTML += '<span class="success">✓ Can access retro-shooter/game.js</span><br>';
+                } else {
+                    status.innerHTML += '<span class="error">✗ Cannot access retro-shooter/game.js</span><br>';
+                }
+            })
+            .catch(error => {
+                status.innerHTML += '<span class="error">✗ Error accessing game.js: ' + error + '</span><br>';
+            });
+    </script>
+</body>
+</html>

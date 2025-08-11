@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blue Connect Four</title>
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to bottom, #000033, #000066, #000099);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+}
+
+.game-container {
+    background: rgba(0, 0, 0, 0.8);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 
+        0 0 50px rgba(0, 100, 255, 0.5),
+        inset 0 0 20px rgba(0, 100, 255, 0.1);
+    border: 2px solid rgba(0, 100, 255, 0.3);
+    position: relative;
+    z-index: 10;
+}
+
+.game-title {
+    text-align: center;
+    font-size: 3em;
+    margin-bottom: 20px;
+    background: linear-gradient(45deg, #0080ff, #00a0ff, #00c0ff, #00e0ff);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: flicker 2s infinite alternate;
+    text-shadow: 0 0 30px rgba(0, 100, 255, 0.5);
+}
+
+@keyframes flicker {
+    0% { opacity: 1; }
+    50% { opacity: 0.8; }
+    100% { opacity: 1; }
+}
+
+.game-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: rgba(0, 100, 255, 0.1);
+    border-radius: 10px;
+}
+
+.player-indicator {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.player1-text {
+    color: #0080ff;
+    text-shadow: 0 0 10px rgba(0, 128, 255, 0.8);
+}
+
+.player2-text {
+    color: #00e0ff;
+    text-shadow: 0 0 10px rgba(0, 224, 255, 0.8);
+}
+
+.reset-button {
+    padding: 10px 20px;
+    font-size: 1.1em;
+    background: linear-gradient(45deg, #0080ff, #00a0ff);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 100, 255, 0.4);
+}
+
+.reset-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 100, 255, 0.6);
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(7, 80px);
+    grid-template-rows: repeat(6, 80px);
+    gap: 5px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 10px;
+    border-radius: 15px;
+    box-shadow: inset 0 0 30px rgba(0, 100, 255, 0.2);
+}
+
+.cell {
+    background: radial-gradient(circle, #001a33, #000d1a);
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.cell:hover {
+    background: radial-gradient(circle, #002a4d, #001a33);
+    box-shadow: 
+        inset 0 0 10px rgba(0, 0, 0, 0.5),
+        0 0 15px rgba(0, 100, 255, 0.3);
+}
+
+.disc {
+    width: 90%;
+    height: 90%;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.player1 {
+    background: radial-gradient(circle at 30% 30%, #00a0ff, #0080ff, #0060cc);
+    box-shadow: 
+        0 0 20px rgba(0, 128, 255, 0.8),
+        inset -5px -5px 10px rgba(0, 0, 0, 0.3);
+}
+
+.player2 {
+    background: radial-gradient(circle at 30% 30%, #80ffff, #00e0ff, #00c0ff);
+    box-shadow: 
+        0 0 20px rgba(0, 224, 255, 0.8),
+        inset -5px -5px 10px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes dropIn {
+    0% {
+        transform: translate(-50%, -350%);
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    80% {
+        transform: translate(-50%, -45%);
+    }
+    100% {
+        transform: translate(-50%, -50%);
+    }
+}
+
+.winner-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3em;
+    font-weight: bold;
+    padding: 20px 40px;
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: 20px;
+    box-shadow: 0 0 50px rgba(0, 100, 255, 0.8);
+    animation: winnerPulse 1s infinite alternate;
+    z-index: 100;
+}
+
+.hidden {
+    display: none;
+}
+
+@keyframes winnerPulse {
+    0% { transform: translate(-50%, -50%) scale(1); }
+    100% { transform: translate(-50%, -50%) scale(1.05); }
+}
+
+.fire-particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.fire-particle {
+    position: absolute;
+    bottom: -50px;
+    width: 10px;
+    height: 10px;
+    background: radial-gradient(circle, #ffffff, #00a0ff, #0040ff);
+    border-radius: 50%;
+    animation: fireRise 3s linear forwards;
+    box-shadow: 0 0 10px rgba(0, 100, 255, 0.8);
+}
+
+.ambient-fire-particle {
+    position: absolute;
+    bottom: -20px;
+    width: 6px;
+    height: 6px;
+    background: radial-gradient(circle, #00a0ff, #0080ff);
+    border-radius: 50%;
+    animation: ambientFireRise 4s linear forwards;
+    opacity: 0.6;
+}
+
+@keyframes fireRise {
+    0% {
+        bottom: -50px;
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: translateX(20px) scale(1.2);
+    }
+    100% {
+        bottom: 100vh;
+        opacity: 0;
+        transform: translateX(-20px) scale(0.5);
+    }
+}
+
+@keyframes ambientFireRise {
+    0% {
+        bottom: -20px;
+        opacity: 0.6;
+        transform: translateX(0) scale(1);
+    }
+    25% {
+        transform: translateX(10px) scale(1.1);
+    }
+    50% {
+        transform: translateX(-10px) scale(0.9);
+    }
+    75% {
+        transform: translateX(5px) scale(1);
+    }
+    100% {
+        bottom: 100vh;
+        opacity: 0;
+        transform: translateX(-5px) scale(0.3);
+    }
+}
+
+@media (max-width: 768px) {
+    .board {
+        grid-template-columns: repeat(7, 60px);
+        grid-template-rows: repeat(6, 60px);
+    }
+    
+    .game-title {
+        font-size: 2em;
+    }
+    
+    .game-container {
+        padding: 20px;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="game-title">💙 Blue Connect Four 💙</h1>
+        <div class="game-info">
+            <div class="player-indicator">
+                <span id="current-player">Player 1's Turn</span>
+            </div>
+            <button id="reset-btn" class="reset-button">New Game</button>
+        </div>
+        <div class="board" id="board"></div>
+        <div id="winner-message" class="winner-message hidden"></div>
+    </div>
+    <div class="fire-particles" id="fire-particles"></div>
+    <script>
+const ROWS = 6;
+const COLS = 7;
+const EMPTY = 0;
+const PLAYER1 = 1;
+const PLAYER2 = 2;
+
+let board = [];
+let currentPlayer = PLAYER1;
+let gameOver = false;
+
+function initializeBoard() {
+    board = [];
+    for (let r = 0; r < ROWS; r++) {
+        board[r] = [];
+        for (let c = 0; c < COLS; c++) {
+            board[r][c] = EMPTY;
+        }
+    }
+}
+
+function createBoardElement() {
+    const boardElement = document.getElementById('board');
+    boardElement.innerHTML = '';
+    
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.row = r;
+            cell.dataset.col = c;
+            cell.addEventListener('click', handleCellClick);
+            boardElement.appendChild(cell);
+        }
+    }
+}
+
+function handleCellClick(event) {
+    if (gameOver) return;
+    
+    const col = parseInt(event.target.dataset.col);
+    const row = getAvailableRow(col);
+    
+    if (row === -1) return;
+    
+    board[row][col] = currentPlayer;
+    updateCell(row, col);
+    
+    if (checkWin(row, col)) {
+        gameOver = true;
+        showWinner();
+        createFireworks();
+        return;
+    }
+    
+    if (checkDraw()) {
+        gameOver = true;
+        showDraw();
+        return;
+    }
+    
+    currentPlayer = currentPlayer === PLAYER1 ? PLAYER2 : PLAYER1;
+    updatePlayerIndicator();
+}
+
+function getAvailableRow(col) {
+    for (let r = ROWS - 1; r >= 0; r--) {
+        if (board[r][col] === EMPTY) {
+            return r;
+        }
+    }
+    return -1;
+}
+
+function updateCell(row, col) {
+    const cells = document.querySelectorAll('.cell');
+    const index = row * COLS + col;
+    const cell = cells[index];
+    
+    const disc = document.createElement('div');
+    disc.className = `disc player${currentPlayer}`;
+    disc.style.animation = 'dropIn 0.5s ease-in-out';
+    cell.appendChild(disc);
+}
+
+function checkWin(row, col) {
+    return checkDirection(row, col, 0, 1) ||
+           checkDirection(row, col, 1, 0) ||
+           checkDirection(row, col, 1, 1) ||
+           checkDirection(row, col, 1, -1);
+}
+
+function checkDirection(row, col, deltaRow, deltaCol) {
+    const player = board[row][col];
+    let count = 1;
+    
+    let r = row + deltaRow;
+    let c = col + deltaCol;
+    while (r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r][c] === player) {
+        count++;
+        r += deltaRow;
+        c += deltaCol;
+    }
+    
+    r = row - deltaRow;
+    c = col - deltaCol;
+    while (r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r][c] === player) {
+        count++;
+        r -= deltaRow;
+        c -= deltaCol;
+    }
+    
+    return count >= 4;
+}
+
+function checkDraw() {
+    for (let c = 0; c < COLS; c++) {
+        if (board[0][c] === EMPTY) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function updatePlayerIndicator() {
+    const indicator = document.getElementById('current-player');
+    indicator.textContent = `Player ${currentPlayer}'s Turn`;
+    indicator.className = `player${currentPlayer}-text`;
+}
+
+function showWinner() {
+    const winnerMessage = document.getElementById('winner-message');
+    winnerMessage.textContent = `💙 Player ${currentPlayer} Wins! 💙`;
+    winnerMessage.className = `winner-message player${currentPlayer}-text`;
+    winnerMessage.classList.remove('hidden');
+}
+
+function showDraw() {
+    const winnerMessage = document.getElementById('winner-message');
+    winnerMessage.textContent = '💙 It\'s a Draw! 💙';
+    winnerMessage.className = 'winner-message';
+    winnerMessage.classList.remove('hidden');
+}
+
+function createFireworks() {
+    const particlesContainer = document.getElementById('fire-particles');
+    for (let i = 0; i < 50; i++) {
+        setTimeout(() => {
+            const particle = document.createElement('div');
+            particle.className = 'fire-particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 2 + 's';
+            particlesContainer.appendChild(particle);
+            
+            setTimeout(() => particle.remove(), 3000);
+        }, i * 50);
+    }
+}
+
+function resetGame() {
+    gameOver = false;
+    currentPlayer = PLAYER1;
+    initializeBoard();
+    createBoardElement();
+    updatePlayerIndicator();
+    document.getElementById('winner-message').classList.add('hidden');
+    document.getElementById('fire-particles').innerHTML = '';
+}
+
+// Initialize game when page loads
+window.onload = function() {
+    initializeBoard();
+    createBoardElement();
+    updatePlayerIndicator();
+    
+    // Attach reset button click handler
+    document.getElementById('reset-btn').onclick = function() {
+        resetGame();
+    };
+};
+
+// Create ambient fire particles
+function createAmbientFireParticles() {
+    const particlesContainer = document.getElementById('fire-particles');
+    setInterval(() => {
+        if (gameOver) return;
+        
+        const particle = document.createElement('div');
+        particle.className = 'ambient-fire-particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particlesContainer.appendChild(particle);
+        
+        setTimeout(() => particle.remove(), 4000);
+    }, 500);
+}
+
+createAmbientFireParticles();
+    </script>
+</body>
+</html>

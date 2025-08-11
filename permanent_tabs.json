@@ -1,0 +1,18 @@
+{
+  "permanent_0": {
+    "name": "Project 1",
+    "order": 0
+  },
+  "permanent_1": {
+    "name": "Project 2",
+    "order": 1
+  },
+  "permanent_2": {
+    "name": "Project 3",
+    "order": 2
+  },
+  "permanent_3": {
+    "name": "Project 4",
+    "order": 3
+  }
+}

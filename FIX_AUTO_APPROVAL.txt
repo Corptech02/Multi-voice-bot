@@ -1,0 +1,11 @@
+
+
+🔴 IMPORTANT: To fix the auto-approval issue, you need to configure Claude directly.
+
+Please run this command in your Claude terminal:
+
+    /allowed-tools add "Bash(*)"
+
+This will stop Claude from asking for permission every time.
+
+

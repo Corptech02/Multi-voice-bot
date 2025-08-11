@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Bidding Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .game-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .item-display {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f8f8;
+            border-radius: 8px;
+        }
+        .item-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .item-value {
+            font-size: 18px;
+            color: #7f8c8d;
+        }
+        .current-bid {
+            font-size: 32px;
+            color: #e74c3c;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .bid-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        input[type="number"] {
+            padding: 10px;
+            font-size: 18px;
+            width: 150px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .timer {
+            text-align: center;
+            font-size: 24px;
+            color: #e67e22;
+            margin: 20px 0;
+        }
+        .player-info {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+        }
+        .history {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f8f8;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .bid-entry {
+            padding: 5px;
+            margin: 2px 0;
+            background-color: white;
+            border-radius: 3px;
+        }
+        .winner {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .status {
+            text-align: center;
+            font-size: 20px;
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .status.active {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .status.ended {
+            background-color: #e74c3c;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Simple Bidding Game</h1>
+        
+        <div class="player-info">
+            <strong>Your Balance:</strong> $<span id="balance">1000</span>
+            <br>
+            <strong>Items Won:</strong> <span id="itemsWon">0</span>
+        </div>
+        
+        <div class="status active" id="status">Game Active</div>
+        
+        <div class="item-display">
+            <div class="item-name" id="itemName">Loading...</div>
+            <div class="item-value">Estimated Value: $<span id="itemValue">0</span></div>
+        </div>
+        
+        <div class="current-bid">
+            Current Bid: $<span id="currentBid">0</span>
+        </div>
+        
+        <div class="timer">
+            Time Remaining: <span id="timer">30</span>s
+        </div>
+        
+        <div class="bid-controls">
+            <input type="number" id="bidAmount" min="1" placeholder="Enter bid">
+            <button onclick="placeBid()" id="bidButton">Place Bid</button>
+            <button onclick="quickBid(10)">+$10</button>
+            <button onclick="quickBid(50)">+$50</button>
+        </div>
+        
+        <div class="history">
+            <h3>Bid History</h3>
+            <div id="bidHistory"></div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <button onclick="newItem()">Next Item</button>
+            <button onclick="resetGame()">Reset Game</button>
+        </div>
+    </div>
+
+    <script>
+        const items = [
+            { name: "Vintage Watch", minValue: 100, maxValue: 300 },
+            { name: "Antique Vase", minValue: 50, maxValue: 200 },
+            { name: "Rare Coin Collection", minValue: 200, maxValue: 500 },
+            { name: "Classic Guitar", minValue: 150, maxValue: 400 },
+            { name: "Art Painting", minValue: 300, maxValue: 800 },
+            { name: "Diamond Ring", minValue: 500, maxValue: 1200 },
+            { name: "Vintage Camera", minValue: 80, maxValue: 250 },
+            { name: "Ancient Book", minValue: 100, maxValue: 350 },
+            { name: "Gold Necklace", minValue: 400, maxValue: 900 },
+            { name: "Rare Stamp", minValue: 50, maxValue: 150 }
+        ];
+
+        let currentItem = null;
+        let currentBid = 0;
+        let timeRemaining = 30;
+        let timerInterval = null;
+        let balance = 1000;
+        let itemsWon = 0;
+        let bidHistory = [];
+
+        function getRandomItem() {
+            const item = items[Math.floor(Math.random() * items.length)];
+            const value = Math.floor(Math.random() * (item.maxValue - item.minValue + 1)) + item.minValue;
+            return { ...item, value };
+        }
+
+        function startNewRound() {
+            currentItem = getRandomItem();
+            currentBid = Math.floor(currentItem.value * 0.1); // Start at 10% of value
+            timeRemaining = 30;
+            bidHistory = [];
+            
+            document.getElementById('itemName').textContent = currentItem.name;
+            document.getElementById('itemValue').textContent = currentItem.value;
+            document.getElementById('currentBid').textContent = currentBid;
+            document.getElementById('bidAmount').value = currentBid + 10;
+            document.getElementById('bidButton').disabled = false;
+            document.getElementById('status').textContent = 'Auction Active';
+            document.getElementById('status').className = 'status active';
+            
+            updateDisplay();
+            startTimer();
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                document.getElementById('timer').textContent = timeRemaining;
+                
+                if (timeRemaining <= 0) {
+                    endAuction();
+                }
+            }, 1000);
+        }
+
+        function placeBid() {
+            const bidAmount = parseInt(document.getElementById('bidAmount').value);
+            
+            if (isNaN(bidAmount) || bidAmount <= currentBid) {
+                alert('Bid must be higher than current bid!');
+                return;
+            }
+            
+            if (bidAmount > balance) {
+                alert('Insufficient balance!');
+                return;
+            }
+            
+            currentBid = bidAmount;
+            document.getElementById('currentBid').textContent = currentBid;
+            
+            // Add to history
+            bidHistory.push({
+                amount: bidAmount,
+                time: 30 - timeRemaining,
+                player: 'You'
+            });
+            
+            updateBidHistory();
+            
+            // Simulate computer bids occasionally
+            if (Math.random() > 0.5 && timeRemaining > 5) {
+                setTimeout(() => {
+                    if (timeRemaining > 0 && currentBid < currentItem.value * 0.8) {
+                        const computerBid = currentBid + Math.floor(Math.random() * 30) + 10;
+                        if (computerBid <= currentItem.value) {
+                            currentBid = computerBid;
+                            document.getElementById('currentBid').textContent = currentBid;
+                            bidHistory.push({
+                                amount: computerBid,
+                                time: 30 - timeRemaining,
+                                player: 'Computer'
+                            });
+                            updateBidHistory();
+                        }
+                    }
+                }, 2000);
+            }
+            
+            // Update suggested bid
+            document.getElementById('bidAmount').value = currentBid + 10;
+        }
+
+        function quickBid(amount) {
+            const newBid = currentBid + amount;
+            document.getElementById('bidAmount').value = newBid;
+            placeBid();
+        }
+
+        function updateBidHistory() {
+            const historyDiv = document.getElementById('bidHistory');
+            historyDiv.innerHTML = bidHistory.slice(-10).reverse().map(bid => 
+                `<div class="bid-entry">${bid.player} bid $${bid.amount} at ${bid.time}s</div>`
+            ).join('');
+        }
+
+        function endAuction() {
+            clearInterval(timerInterval);
+            document.getElementById('bidButton').disabled = true;
+            document.getElementById('status').textContent = 'Auction Ended';
+            document.getElementById('status').className = 'status ended';
+            
+            // Check if player won
+            const lastBid = bidHistory[bidHistory.length - 1];
+            if (lastBid && lastBid.player === 'You') {
+                balance -= currentBid;
+                itemsWon++;
+                const profit = currentItem.value - currentBid;
+                alert(`Congratulations! You won ${currentItem.name} for $${currentBid}.\nEstimated value: $${currentItem.value}\nProfit: $${profit}`);
+            } else {
+                alert(`Auction ended. ${currentItem.name} sold to Computer for $${currentBid}.`);
+            }
+            
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('balance').textContent = balance;
+            document.getElementById('itemsWon').textContent = itemsWon;
+        }
+
+        function newItem() {
+            if (balance <= 0) {
+                alert('Game Over! You ran out of money.');
+                return;
+            }
+            startNewRound();
+        }
+
+        function resetGame() {
+            balance = 1000;
+            itemsWon = 0;
+            updateDisplay();
+            startNewRound();
+        }
+
+        // Start the game
+        startNewRound();
+    </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+#!/usr/bin/expect -f
+# Expect script to handle Claude's interactive prompt
+
+set timeout 30
+spawn /usr/local/bin/claude --dangerously-skip-permissions
+
+# Wait for the prompt
+expect {
+    ">" {
+        # Claude is ready
+        interact
+    }
+    timeout {
+        puts "Timeout waiting for Claude prompt"
+        exit 1
+    }
+}

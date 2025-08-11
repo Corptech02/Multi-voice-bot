@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Debug Test</title>
+    <style>
+        body {
+            margin: 20px;
+            background-color: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 2px solid #00ff00;
+            display: block;
+            margin: 20px 0;
+        }
+        .debug {
+            background: #333;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            border: 1px solid #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Canvas Rendering Debug Test</h1>
+    
+    <div class="debug" id="status">
+        <h3>Status:</h3>
+        <div id="log"></div>
+    </div>
+    
+    <canvas id="testCanvas" width="800" height="600"></canvas>
+    
+    <div class="debug">
+        <h3>Tests:</h3>
+        <button onclick="testBasicDrawing()">Test Basic Drawing</button>
+        <button onclick="testAnimation()">Test Animation</button>
+        <button onclick="loadGame()">Load Isaac Game</button>
+        <button onclick="loadRetroShooter()">Load Retro Shooter</button>
+    </div>
+    
+    <script>
+        const log = document.getElementById('log');
+        const canvas = document.getElementById('testCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function addLog(message, color = 'white') {
+            const entry = document.createElement('div');
+            entry.style.color = color;
+            entry.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+            log.appendChild(entry);
+            console.log(message);
+        }
+        
+        // Initial canvas test
+        addLog('Canvas element found: ' + (canvas !== null), canvas ? 'lime' : 'red');
+        addLog('Canvas context (2d) obtained: ' + (ctx !== null), ctx ? 'lime' : 'red');
+        addLog('Canvas dimensions: ' + canvas.width + 'x' + canvas.height, 'cyan');
+        
+        // Test if canvas is visible
+        const rect = canvas.getBoundingClientRect();
+        addLog('Canvas position: ' + rect.left + ',' + rect.top + ' size: ' + rect.width + 'x' + rect.height, 'cyan');
+        addLog('Canvas display style: ' + window.getComputedStyle(canvas).display, 'cyan');
+        
+        function testBasicDrawing() {
+            addLog('Testing basic drawing...', 'yellow');
+            
+            try {
+                // Clear canvas
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw test shapes
+                ctx.fillStyle = 'red';
+                ctx.fillRect(50, 50, 100, 100);
+                addLog('Drew red rectangle at 50,50', 'lime');
+                
+                ctx.fillStyle = 'blue';
+                ctx.beginPath();
+                ctx.arc(300, 150, 50, 0, Math.PI * 2);
+                ctx.fill();
+                addLog('Drew blue circle at 300,150', 'lime');
+                
+                ctx.fillStyle = 'green';
+                ctx.font = '24px Arial';
+                ctx.fillText('Canvas is working!', 200, 300);
+                addLog('Drew text', 'lime');
+                
+                // Test image data
+                const imageData = ctx.getImageData(100, 100, 1, 1);
+                const pixel = imageData.data;
+                addLog('Pixel at 100,100: R=' + pixel[0] + ' G=' + pixel[1] + ' B=' + pixel[2] + ' A=' + pixel[3], 'cyan');
+                
+            } catch (error) {
+                addLog('Error during drawing: ' + error.message, 'red');
+            }
+        }
+        
+        let animationId = null;
+        function testAnimation() {
+            addLog('Testing animation...', 'yellow');
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            
+            let x = 0;
+            function animate() {
+                try {
+                    ctx.fillStyle = 'black';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    ctx.fillStyle = 'yellow';
+                    ctx.fillRect(x, 200, 50, 50);
+                    
+                    x = (x + 2) % (canvas.width - 50);
+                    
+                    animationId = requestAnimationFrame(animate);
+                } catch (error) {
+                    addLog('Animation error: ' + error.message, 'red');
+                    cancelAnimationFrame(animationId);
+                }
+            }
+            animate();
+            addLog('Animation started', 'lime');
+        }
+        
+        function loadGame() {
+            addLog('Loading Isaac game...', 'yellow');
+            window.location.href = 'isaac_game.html';
+        }
+        
+        function loadRetroShooter() {
+            addLog('Loading Retro Shooter...', 'yellow');
+            window.location.href = 'retro-shooter/index.html';
+        }
+        
+        // Initial test
+        testBasicDrawing();
+    </script>
+</body>
+</html>

@@ -1481,6 +1481,9 @@ HTML_TEMPLATE = '''
                 document.getElementById('saveButton').classList.add('active');
                 // Load the saved sessions
                 await loadSessions(false);
+                
+                // Note: Sessions will be created on-demand when first message is sent
+                console.log('Saved sessions loaded - orchestrator sessions will be created on first message');
             } else {
                 // Otherwise, check localStorage preference
                 const savedSaveState = localStorage.getItem('saveEnabled');
